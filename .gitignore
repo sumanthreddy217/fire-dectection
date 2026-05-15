@@ -1,0 +1,53 @@
+# Virtual Environment
+venv/
+env/
+
+# Python Cache
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Jupyter Notebook
+.ipynb_checkpoints/
+
+# VS Code
+.vscode/
+
+# PyCharm
+.idea/
+
+# Environment Variables
+.env
+
+# Model Weights
+*.pt
+
+# Images
+snapshot.jpg
+
+# Logs
+*.log
+
+# OS Files
+.DS_Store
+Thumbs.db
+
+# Build Files
+build/
+dist/
+
+# Temporary Files
+temp/
+tmp/
+
+# Python Packaging
+*.egg-info/
+*.egg
+
+# OpenCV Generated Files
+*.avi
+*.mp4
+
+# System Files
+desktop.ini
