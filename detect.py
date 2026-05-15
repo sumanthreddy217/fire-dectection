@@ -9,8 +9,8 @@ import threading
 import time
 
 # --- Telegram Configuration ---
-BOT_TOKEN = "8217514651:AAGiW5MmXH_QEi5TLnLHNAcQyDQ8Tw9ULN0"
-CHAT_ID = "5302649379"
+BOT_TOKEN = "YOUR_BOT_TOKEN"
+CHAT_ID = "YOUR_CHAT_ID"
 
 last_alert_time = 0
 alert_cooldown = 10  # seconds
