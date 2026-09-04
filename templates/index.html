@@ -1,0 +1,217 @@
+```html
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Fire & Smoke Monitoring System</title>
+
+    <style>
+
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            font-family: Arial, sans-serif;
+            background: #111;
+            color: white;
+            text-align: center;
+        }
+
+        header {
+            padding: 25px;
+            background: #1b1b1b;
+        }
+
+        h1 {
+            margin: 0;
+            font-size: 30px;
+        }
+
+        .container {
+            max-width: 1000px;
+            margin: 30px auto;
+            padding: 20px;
+        }
+
+        .camera-box {
+            background: #000;
+            border-radius: 12px;
+            overflow: hidden;
+            margin-bottom: 25px;
+        }
+
+        .camera-box img {
+            width: 100%;
+            display: block;
+        }
+
+        .status {
+            background: #1b1b1b;
+            border-radius: 12px;
+            padding: 25px;
+        }
+
+        .status h2 {
+            margin-top: 0;
+        }
+
+        .detection {
+            font-size: 24px;
+            font-weight: bold;
+            margin: 15px;
+        }
+
+        .confidence {
+            font-size: 20px;
+        }
+
+        .safe {
+            color: #00ff88;
+        }
+
+        .danger {
+            color: #ff3333;
+        }
+
+        footer {
+            padding: 20px;
+            color: #aaa;
+        }
+
+    </style>
+
+</head>
+
+
+<body>
+
+    <header>
+
+        <h1>
+            🔥 Automated Fire & Smoke Monitoring System
+        </h1>
+
+        <p>
+            YOLOv8 Vision-Based Detection
+        </p>
+
+    </header>
+
+
+    <div class="container">
+
+        <div class="camera-box">
+
+            <img
+                src="{{ url_for('video_feed') }}"
+                alt="Camera Feed"
+            >
+
+        </div>
+
+
+        <div class="status">
+
+            <h2>Detection Status</h2>
+
+            <div
+                id="detection"
+                class="detection safe"
+            >
+                Loading...
+            </div>
+
+            <div
+                id="confidence"
+                class="confidence"
+            >
+                Confidence: --
+            </div>
+
+        </div>
+
+    </div>
+
+
+    <footer>
+
+        Automated Fire & Smoke Monitoring System
+
+    </footer>
+
+
+    <script>
+
+        function updateDetection() {
+
+            fetch("/detection")
+
+                .then(response => response.json())
+
+                .then(data => {
+
+                    const detection =
+                        document.getElementById("detection");
+
+                    const confidence =
+                        document.getElementById("confidence");
+
+
+                    if (data.detected) {
+
+                        detection.innerHTML =
+                            "🚨 " + data.type;
+
+                        detection.className =
+                            "detection danger";
+
+                        confidence.innerHTML =
+                            "Confidence: " +
+                            data.confidence +
+                            "%";
+
+                    }
+
+                    else {
+
+                        detection.innerHTML =
+                            "✅ No Fire / Smoke Detected";
+
+                        detection.className =
+                            "detection safe";
+
+                        confidence.innerHTML =
+                            "Confidence: --";
+
+                    }
+
+                })
+
+                .catch(error => {
+
+                    console.log(error);
+
+                });
+
+        }
+
+
+        // Update detection every 500 milliseconds
+
+        setInterval(updateDetection, 500);
+
+        updateDetection();
+
+    </script>
+
+</body>
+
+</html>
+```
