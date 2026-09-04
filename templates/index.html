@@ -1,4 +1,3 @@
-```html
 <!DOCTYPE html>
 <html lang="en">
 
@@ -6,9 +5,12 @@
 
     <meta charset="UTF-8">
 
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport"
+          content="width=device-width, initial-scale=1.0">
 
-    <title>Fire & Smoke Monitoring System</title>
+    <title>
+        Fire & Smoke Monitoring System
+    </title>
 
     <style>
 
@@ -26,12 +28,11 @@
 
         header {
             padding: 25px;
-            background: #1b1b1b;
+            background: #1c1c1c;
         }
 
         h1 {
             margin: 0;
-            font-size: 30px;
         }
 
         .container {
@@ -41,35 +42,40 @@
         }
 
         .camera-box {
-            background: #000;
+            background: black;
             border-radius: 12px;
             overflow: hidden;
-            margin-bottom: 25px;
         }
 
-        .camera-box img {
+        video,
+        #resultImage {
             width: 100%;
             display: block;
         }
 
+        #resultImage {
+            display: none;
+        }
+
+        button {
+            margin: 20px 0;
+            padding: 14px 30px;
+            border: none;
+            border-radius: 8px;
+            font-size: 18px;
+            cursor: pointer;
+        }
+
         .status {
-            background: #1b1b1b;
-            border-radius: 12px;
+            background: #1c1c1c;
+            margin-top: 20px;
             padding: 25px;
+            border-radius: 12px;
         }
 
-        .status h2 {
-            margin-top: 0;
-        }
-
-        .detection {
+        #detection {
             font-size: 24px;
             font-weight: bold;
-            margin: 15px;
-        }
-
-        .confidence {
-            font-size: 20px;
         }
 
         .safe {
@@ -80,9 +86,9 @@
             color: #ff3333;
         }
 
-        footer {
-            padding: 20px;
-            color: #aaa;
+        #confidence {
+            margin-top: 10px;
+            font-size: 18px;
         }
 
     </style>
@@ -107,32 +113,47 @@
 
     <div class="container">
 
+        <button id="startButton">
+            📷 Start Camera
+        </button>
+
+
         <div class="camera-box">
 
+            <video
+                id="video"
+                autoplay
+                playsinline
+                muted>
+            </video>
+
             <img
-                src="{{ url_for('video_feed') }}"
-                alt="Camera Feed"
-            >
+                id="resultImage"
+                alt="Detection result">
 
         </div>
 
 
-        <div class="status">
+        <canvas
+            id="canvas"
+            style="display:none;">
+        </canvas>
 
-            <h2>Detection Status</h2>
+
+        <div class="status">
 
             <div
                 id="detection"
-                class="detection safe"
-            >
-                Loading...
+                class="safe">
+
+                Camera not started
+
             </div>
 
-            <div
-                id="confidence"
-                class="confidence"
-            >
+            <div id="confidence">
+
                 Confidence: --
+
             </div>
 
         </div>
@@ -140,78 +161,256 @@
     </div>
 
 
-    <footer>
-
-        Automated Fire & Smoke Monitoring System
-
-    </footer>
-
-
     <script>
 
-        function updateDetection() {
+        const video =
+            document.getElementById("video");
 
-            fetch("/detection")
+        const canvas =
+            document.getElementById("canvas");
 
-                .then(response => response.json())
+        const resultImage =
+            document.getElementById("resultImage");
 
-                .then(data => {
+        const startButton =
+            document.getElementById("startButton");
 
-                    const detection =
-                        document.getElementById("detection");
+        const detection =
+            document.getElementById("detection");
 
-                    const confidence =
-                        document.getElementById("confidence");
+        const confidence =
+            document.getElementById("confidence");
 
 
-                    if (data.detected) {
+        let stream = null;
 
-                        detection.innerHTML =
-                            "🚨 " + data.type;
+        let detecting = false;
 
-                        detection.className =
-                            "detection danger";
 
-                        confidence.innerHTML =
-                            "Confidence: " +
-                            data.confidence +
-                            "%";
+        startButton.addEventListener(
+            "click",
+            startCamera
+        );
 
-                    }
 
-                    else {
+        async function startCamera() {
 
-                        detection.innerHTML =
-                            "✅ No Fire / Smoke Detected";
+            try {
 
-                        detection.className =
-                            "detection safe";
+                stream =
+                    await navigator.mediaDevices
+                    .getUserMedia({
+                        video: true,
+                        audio: false
+                    });
 
-                        confidence.innerHTML =
-                            "Confidence: --";
+                video.srcObject = stream;
 
-                    }
+                detection.innerText =
+                    "✅ Camera started";
 
-                })
+                detection.className =
+                    "safe";
 
-                .catch(error => {
+                startButton.innerText =
+                    "📷 Camera Running";
 
-                    console.log(error);
+                startButton.disabled =
+                    true;
 
-                });
+                video.style.display =
+                    "block";
+
+                resultImage.style.display =
+                    "none";
+
+                detecting = true;
+
+                detectFrame();
+
+            }
+
+            catch (error) {
+
+                console.error(error);
+
+                detection.innerText =
+                    "❌ Camera permission denied";
+
+                detection.className =
+                    "danger";
+
+                confidence.innerText =
+                    "Please allow camera access.";
+
+            }
 
         }
 
 
-        // Update detection every 500 milliseconds
+        async function detectFrame() {
 
-        setInterval(updateDetection, 500);
+            if (!detecting) {
+                return;
+            }
 
-        updateDetection();
+
+            if (video.readyState < 2) {
+
+                setTimeout(
+                    detectFrame,
+                    500
+                );
+
+                return;
+
+            }
+
+
+            canvas.width =
+                video.videoWidth;
+
+            canvas.height =
+                video.videoHeight;
+
+
+            const context =
+                canvas.getContext("2d");
+
+
+            context.drawImage(
+                video,
+                0,
+                0,
+                canvas.width,
+                canvas.height
+            );
+
+
+            const image =
+                canvas.toDataURL(
+                    "image/jpeg",
+                    0.7
+                );
+
+
+            try {
+
+                const response =
+                    await fetch(
+                        "/detect",
+                        {
+                            method: "POST",
+
+                            headers: {
+                                "Content-Type":
+                                    "application/json"
+                            },
+
+                            body: JSON.stringify({
+                                image: image
+                            })
+                        }
+                    );
+
+
+                const data =
+                    await response.json();
+
+
+                if (!data.success) {
+
+                    console.error(
+                        data.error
+                    );
+
+                    setTimeout(
+                        detectFrame,
+                        1000
+                    );
+
+                    return;
+
+                }
+
+
+                // Show annotated image
+
+                if (data.image) {
+
+                    resultImage.src =
+                        data.image;
+
+                    resultImage.style.display =
+                        "block";
+
+                    video.style.display =
+                        "none";
+
+                }
+
+
+                // Detection result
+
+                if (
+                    data.detections &&
+                    data.detections.length > 0
+                ) {
+
+                    const first =
+                        data.detections[0];
+
+
+                    detection.innerText =
+                        "🚨 " + first.type;
+
+                    detection.className =
+                        "danger";
+
+
+                    confidence.innerText =
+                        "Confidence: "
+                        + first.confidence
+                        + "%";
+
+                }
+
+                else {
+
+                    detection.innerText =
+                        "✅ No Fire / Smoke Detected";
+
+                    detection.className =
+                        "safe";
+
+                    confidence.innerText =
+                        "Confidence: --";
+
+                }
+
+            }
+
+            catch (error) {
+
+                console.error(
+                    "Detection error:",
+                    error
+                );
+
+            }
+
+
+            // Run again
+
+            setTimeout(
+                detectFrame,
+                500
+            );
+
+        }
 
     </script>
 
 </body>
 
 </html>
-```
